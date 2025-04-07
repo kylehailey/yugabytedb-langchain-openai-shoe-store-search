@@ -1,5 +1,12 @@
+from langchain_experimental.sql import SQLDatabaseChain
+from langchain.sql_database import SQLDatabase
+from langchain_openai import OpenAI
 from dotenv import load_dotenv
+import psycopg2
+import json;
 import os
+
+
 # Load environment variables from .env file
 load_dotenv()
 
@@ -8,11 +15,6 @@ def get_env_vars(*args):
 
 OPENAI_API_KEY, DB_HOST, DB_NAME, DB_USERNAME, DB_PASSWORD, DB_PORT = get_env_vars('OPENAI_API_KEY', 'DB_HOST', 'DB_NAME', 'DB_USERNAME', 'DB_PASSWORD', 'DB_PORT')
 
-from langchain.sql_database import SQLDatabase
-import psycopg2
-from langchain_openai import OpenAI
-from langchain_experimental.sql import SQLDatabaseChain
-import json;
 
 # Establish database connection
 LOCALDB_URL_STRING = (
@@ -57,9 +59,8 @@ def query_database(user_prompt):
     prompt = custom_prompt(user_prompt)
 
     sql_database = SQLDatabase.from_uri(LOCALDB_URL_STRING, include_tables=["products", "users", "purchases", "product_inventory"])
-
     llm = OpenAI(temperature=0, max_tokens=-1)
-    db_chain = SQLDatabaseChain(llm=llm, database=sql_database, verbose=True, use_query_checker=True,return_intermediate_steps=True)
+    db_chain = SQLDatabaseChain.from_llm( llm, db=sql_database, verbose=True, use_query_checker=True, return_intermediate_steps=True)
 
     try:
         nw_ans = db_chain.invoke(prompt)
